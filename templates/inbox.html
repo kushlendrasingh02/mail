@@ -161,9 +161,9 @@
                                     <table class="table email-table no-wrap table-hover v-middle mb-0 font-14">
                                         <thead>
                                             <tr>
-                                                <th scope="col">#</th>
-                                                <th scope="col">To</th>
+                                                <!--<th scope="col">#</th>-->
                                                 <th scope="col">From</th>
+                                                <th scope="col">To</th>
                                                 <th scope="col">Subject</th>
                                                 <th scope="col">Date</th>
                                             </tr>
@@ -171,8 +171,8 @@
                                         <tbody>
                                             {% for email in emails %}
                                             <tr onclick="location.href='/inbox/{{ email[0] }}'">
-                                                <th scope="row">{{ email[0] }}</th>
-                                                <td>{{ email[1] }}</td>
+                                                <th scope="row">{{ email[1] }}</th>
+                                                <!--<td>{{ email[1] }}</td-->
                                                 <td>{{ email[2] }}</td>
                                                 <td>{{ email[3] }}</td>
                                                 <td>{{ email[5] }}</td>
