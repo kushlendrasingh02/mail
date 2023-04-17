@@ -3,9 +3,14 @@ from flask import Flask, session, redirect, url_for, request, render_template, f
 from datetime import datetime   
 import spacy
 import hashlib
+import os
+from twilio.rest import Client
+from cryptography.fernet import Fernet
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+key = Fernet.generate_key()
+fernet = Fernet(key)
 app.config['SECRET_KEY'] = 'df0331cefc6c2b9a5d0208a726a5d1c0fd37324feba25506'
 
 def get_db_connection():
@@ -82,15 +87,18 @@ def signup():
     # get the form data
     username = request.form['username']
     email = request.form['email']
+    phone = request.form['phone']
     password = request.form['password']
+    
 
     password = hashlib.sha256(password.encode()).hexdigest()
+
     # connect to the database
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
 
     # insert the user data into the database
-    cur.execute('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', (username, email, password))
+    cur.execute('INSERT INTO users (username, email, phone, password) VALUES (?, ?, ?, ?)', (username, email, phone, password))
     conn.commit()
 
     # close the database connection
@@ -100,10 +108,38 @@ def signup():
     # set the session variables
     session['username'] = username
     session['email'] = email
+    session['phone'] = phone
     session['role'] = 0
 
     # redirect the user to the index page
-    return redirect(url_for('inbox', username=username))
+    return redirect(url_for('two_fa'))
+
+@app.route('/two_fa')
+def two_fa():
+    return render_template('2fa.html')
+
+@app.route('/two_fa', methods=['POST'])
+def two_fa_post():
+    if request.method == 'POST':
+        code = request.form['otp']
+        phone = session.get('phone', None)
+        account_sid = "AC821ecdd844855ad197f7c094f292d481"
+        auth_token = "5aa75cce79ea4ad1a594ea510581dce2"
+        verify_sid = "VA99fd2da7e04bb3f3c93ca7ee2ce87317"
+        verified_number = phone
+        client = Client(account_sid, auth_token)
+        verification = client.verify.v2.services(verify_sid) \
+            .verifications \
+            .create(to=verified_number, channel="sms")
+        # print(verification.status)
+        otp_code = code
+        verification_check = client.verify.v2.services(verify_sid) \
+            .verification_checks \
+            .create(to=verified_number, code=otp_code)
+        if verification_check.status == 'approved':
+            return redirect(url_for('inbox'))
+        else:
+            return redirect(url_for('two_fa'))
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -129,11 +165,12 @@ def login():
     if user:
         session['username'] = user[1]
         session['email'] = user[2]
+        session['phone'] = user[7]
         session['role'] = user[5]
         if session.get('role') == 1:
             return redirect(url_for('admin'))
         else:
-            return redirect(url_for('inbox'))
+            return redirect(url_for('two_fa'))
     else:
         # if the user does not exist, redirect them to the index page
         return redirect(url_for('index'))
@@ -239,7 +276,11 @@ def email():
                     
         conn = sqlite3.connect('database.db')
         cur = conn.cursor()
-
+        sender = fernet.encrypt(sender.encode())
+        recipient = fernet.encrypt(recipient.encode())
+        subject = fernet.encrypt(subject.encode())
+        body = fernet.encrypt(body  .encode())
+        
         if matches:
             matches = set(matches)
             matches = ','.join(str(k) for k in matches)
@@ -267,8 +308,25 @@ def threat():
     c.execute("SELECT * FROM email WHERE threat = 1")
     threats = c.fetchall()
     c.close()
+    
     threats = [(x[0], x[1], x[2], x[5], x[6], x[7]) for x in threats]
+    
+    for i, row in enumerate(threats):
+        sender = row[2] # Assuming the encrypted data is in the 3rd column
+        sender = fernet.decrypt(sender.encode())
+        sender = sender.decode()
+        recipient = row[3]
+        recipient = fernet.decrypt(recipient.encode())
+        recipient = recipient.decode()
+        subject = row[4]
+        subject = fernet.decrypt(subject.encode())
+        subject = subject.decode()
+        body    = row[5]
+        body = fernet.decrypt(body.encode())
+        body = body.decode()
+        threats[i] = (row[0], row[1], sender, recipient, subject, body) # Update the decrypted data in the list
 
+    
     
     conn.close()
     return render_template('dashboard.html', headers=headers, objects=threats, object_name = "threat")
