@@ -111,7 +111,7 @@
                                             <li class="list-inline-item text-danger">
                                                 <a href="/logout">
                                                     <button class="btn btn-circle btn-danger text-white" href="/logout">
-                                                        <i class="fa fa-trash"></i>
+                                                        <i class="fa fa-sign-out"></i>
                                                     </button>
                                                     <span class="ml-2 font-normal text-dark">Logout</span>
                                                 </a>
@@ -122,9 +122,9 @@
                                 <div class="col-md-9" id="myForm" style="display:none">
                                     <div class="panel panel-default">
                                         <div class="panel-body message">
-                                            <p class="text-center">New Email</p>
+                                            
                                             <form class="form-horizontal" role="form" method="POST"
-                                                action="{{ url_for('email') }}">
+                                                action="{{ url_for('email') }}" id="mail_compose">
                                                 <div class="form-group">
                                                     <label for="to" class="col-sm-1 control-label">To:</label>
                                                     <div class="col-sm-11">
@@ -147,7 +147,7 @@
                                                         </div>
                                                         <div class="form-group">
                                                             <button type="submit" class="btn btn-success">Send</button>
-                                                            <button type="reset" class="btn btn-danger">Discard</button>
+                                                            <button type="reset" class="btn btn-danger" onclick="discard_action()">Discard</button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -239,7 +239,10 @@
         function closeForm() {
             document.getElementById("myForm").style.display = "none";
         }
+        function discard_action() {
+            document.getElementById("myForm").style.display = "none";
+            document.getElementById("myForm").reset();
+        }
     </script>
 </body>
-
 </html>

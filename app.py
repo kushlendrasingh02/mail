@@ -2,6 +2,7 @@ import sqlite3
 from flask import Flask, session, redirect, url_for, request, render_template, flash, jsonify, abort
 from datetime import datetime   
 import spacy
+import hashlib
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -83,6 +84,7 @@ def signup():
     email = request.form['email']
     password = request.form['password']
 
+    password = hashlib.sha256(password.encode()).hexdigest()
     # connect to the database
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
@@ -112,6 +114,7 @@ def login():
     # print('email:', email)
     # print('password:', password)
 
+    password = hashlib.sha256(password.encode()).hexdigest()
     # connect to the database
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
@@ -139,7 +142,8 @@ def login():
 def admin():
     # check if the user is an admin
     if session.get('role') == 1:
-        return render_template('dashboard.html')
+        return redirect(url_for('threat'))
+        # return render_template('dashboard.html')
     else:
         # if the user is not an admin, redirect to the index page
         return redirect(url_for('index'))
