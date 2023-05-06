@@ -1,0 +1,11 @@
+{
+  "name": "my-flask-project",
+  "version": "1.0.0",
+  "description": "My Flask project",
+  "scripts": {
+    "build": "python app.py"
+  },
+  "dependencies": {
+    "flask": "latest"
+  }
+}
