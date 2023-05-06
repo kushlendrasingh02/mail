@@ -1,5 +1,4 @@
 setuptools
-blis
 catalogue
 certifi
 charset-normalizer
