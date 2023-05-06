@@ -4,7 +4,6 @@ certifi
 charset-normalizer
 click
 colorama
-confection
 cymem
 en-core-web-sm
 Flask
